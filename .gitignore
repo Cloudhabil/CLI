@@ -1,7 +1,7 @@
-/.venv/
-/agent/logs/
-/agent/state/
-/.env.local
-/project/*.cache
-
-/.agent_logs/
++/.venv/
++/agent/logs/
++/agent/state/
++/.env.local
++/project/*.cache
++
++/.agent_logs/
