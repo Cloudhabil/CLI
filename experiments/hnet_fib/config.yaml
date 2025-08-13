@@ -1,0 +1,13 @@
+model:
+  dc_factors: [3, 5]
+  widths: [1024, 1659, 2687]
+  ratio_loss_alpha: 0.03
+train:
+  curriculum:
+    - {epochs: 1, dc_factors: [2]}
+    - {epochs: 2, dc_factors: [3]}
+    - {epochs: 2, dc_factors: [3,5]}
+eval:
+  save_dir: runs/hnet_fib
+  report_bpb: true
+  report_bpic: true
