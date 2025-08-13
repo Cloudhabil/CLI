@@ -112,7 +112,7 @@ def main():
     console.print("[dim]Tip: escribe texto o usa comandos como /file, /model, /exec, /help[/dim]\n")
 
     history = InMemoryHistory()
-    completer = WordCompleter(["/help","/model","/file","/task","/exec","/clear","/exit"], ignore_case=True)
+    completer = WordCompleter(["/help","/model","/file","/task","/exec","/agent","/clear","/exit"], ignore_case=True)
     session = PromptSession(history=history, completer=completer)
 
     while True:
@@ -132,6 +132,14 @@ def main():
 
             if cmd == "/exit":
                 break
+            if cmd == "/agent":
+                import shlex, subprocess
+                agent_parts = shlex.split(user)
+                goal = " ".join(agent_parts[1:]) or "Show directory"
+                console.print(f"[agent] goal = {goal}")
+                rc = subprocess.call([sys.executable, "agent.py", "--goal", goal])
+                console.print(f"[agent] exit code: {rc}")
+                continue
             if cmd == "/help":
                 console.print(HELP)
                 continue

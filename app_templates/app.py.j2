@@ -1,0 +1,41 @@
+"""
+Cloudhabil CLI - generated {{ timestamp }} by {{ author }}
+{{ description }}
+"""
+from __future__ import annotations
+import sys, json, pathlib, time
+import typer
+from rich import print
+
+app = typer.Typer(add_completion=False)
+
+@app.command()
+def plan():
+    """
+    Produce a step-by-step plan following H-Net inspired stages:
+    E_s -> Chunk -> M -> Dechunk -> D_s
+    """
+    stages = ["E_s","Chunk","M","Dechunk","D_s"]
+    print({"pipeline": stages, "note":"placeholder"})
+
+@app.command()
+def run():
+    """
+    Execute the current plan stub. Replace with real actions as the agent evolves.
+    """
+    print("Running plan stub... ok")
+
+@app.command()
+def debug():
+    """
+    Act as an advanced debugger: print env, versions, and file status.
+    """
+    info = {
+        "python": sys.version,
+        "cwd": str(pathlib.Path.cwd()),
+        "files": [str(p) for p in pathlib.Path('.').glob('**/*')][:50]
+    }
+    print(info)
+
+if __name__ == "__main__":
+    app()
