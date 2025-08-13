@@ -1,0 +1,7 @@
+﻿{
+    "endpoint":  "http://127.0.0.1:11434",
+    "provider":  "ollama",
+    "timeoutSeconds":  180,
+    "model":  "mylocal",
+    "maxOutputTokens":  1024
+}
