@@ -1,0 +1,17 @@
+router:
+  name: codegemma-2b
+  base_url: http://127.0.0.1:8081/v1
+  model_id: codegemma-2b_Q8_0
+  params: {temperature: 0.2, top_p: 0.9, max_tokens: 512}
+
+generator_primary:
+  name: qwen2.5-coder-7b
+  base_url: http://127.0.0.1:8082/v1
+  model_id: Qwen2.5-Coder-7B-Instruct_Q5_K_M
+  params: {temperature: 0.2, top_p: 0.8, max_tokens: 2048}
+
+assistant_qc:
+  name: deepseek-coder-7b
+  base_url: http://127.0.0.1:8083/v1
+  model_id: DeepSeek-Coder-7B-Instruct-v1.5_Q8_0
+  params: {temperature: 0.4, top_p: 0.9, max_tokens: 1024}
