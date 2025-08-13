@@ -1,0 +1,5 @@
+/.venv/
+/agent/logs/
+/agent/state/
+/.env.local
+/project/*.cache
