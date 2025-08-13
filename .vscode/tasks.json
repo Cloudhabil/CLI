@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Preflight",
+      "type": "shell",
+      "command": "powershell -ExecutionPolicy Bypass -File scripts\\preflight.ps1",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run CLI REPL",
+      "type": "shell",
+      "command": ".\\.venv\\Scripts\\python.exe ch_repl.py",
+      "problemMatcher": []
+    }
+  ]
+}
