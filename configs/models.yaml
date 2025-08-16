@@ -1,0 +1,13 @@
+models:
+  codegemma:
+    kind: ollama
+    endpoint: http://127.0.0.1:11434/api/chat
+    model: codegemma:latest
+  qwen_coder:
+    kind: ollama
+    endpoint: http://127.0.0.1:11434/api/chat
+    model: qwen2.5-coder:latest
+  llama_instruct:
+    kind: ollama
+    endpoint: http://127.0.0.1:11434/api/chat
+    model: llama3.1:latest
