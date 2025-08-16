@@ -1,3 +1,11 @@
+"""Agent API server secured by a shared secret and bus token.
+
+Incoming HTTP requests are validated against ``AGENT_SHARED_SECRET`` via
+middleware checking the ``Authorization: Bearer`` header.
+When configured, the service authenticates to the message bus with ``BUS_TOKEN``
+so only trusted agents can publish or subscribe.
+"""
+
 import os
 import threading
 from pathlib import Path
