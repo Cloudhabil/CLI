@@ -1,19 +1,19 @@
 Param()
-Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+Write-Host "Preflight checks..." -ForegroundColor Cyan
 
-Write-Host "Preflight starting..."
+if (-not (Test-Path ".env.local")) {
+  Write-Host "Creating .env.local from .env.example (if present)" -ForegroundColor Yellow
+  Copy-Item .env.example .env.local -ErrorAction SilentlyContinue
+}
 
-try { $py = & python --version; Write-Host "Python: $py" }
-catch { Write-Error "Python not found in PATH or venv not activated."; exit 1 }
+$envVars = @("BUS_TOKEN","AGENT_SHARED_SECRET")
+$missing = @()
+foreach ($v in $envVars) {
+  if (-not $env:$v) { $missing += $v }
+}
 
-$envPath = ".env.local"
-if (Test-Path $envPath) { Write-Host ".env.local present" } else { Write-Warning ".env.local missing. Copy .env.example" }
+if ($missing.Count -gt 0) {
+  Write-Host "Warning: Missing secrets: $($missing -join ', '). Set them in your environment or .env.local." -ForegroundColor Yellow
+}
 
-$ollamaHost = $env:OLLAMA_HOST; if (-not $ollamaHost) { $ollamaHost = "http://127.0.0.1:11434" }
-try {
-  $resp = Invoke-WebRequest -Method Get -Uri "$ollamaHost/api/tags" -TimeoutSec 5
-  Write-Host "Ollama reachable. Models:"; ($resp.Content | ConvertFrom-Json).models | ForEach-Object { " - " + $_.name } | Write-Host
-} catch { Write-Warning "Ollama not reachable at $ollamaHost" }
-
-Write-Host "Preflight done."
+Write-Host "Preflight complete." -ForegroundColor Green

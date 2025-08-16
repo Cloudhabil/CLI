@@ -2,6 +2,11 @@
 agent/logs/
 agent/state/
 .env.local
+.env.*
+config/secrets.*
+*.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 project/*.cache
 .agent_logs/
 __pycache__/

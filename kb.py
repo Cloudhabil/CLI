@@ -1,7 +1,9 @@
 import sqlite3
 import threading
 from pathlib import Path
-from typing import Any, Iterable, List
+from typing import Any, Iterable, List, Dict
+
+from hnet.dynamic_chunker import DynamicChunker
 
 DB_PATH = Path("data/kb.db")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -43,6 +45,13 @@ def search(q: str) -> List[dict]:
     rows = conn.execute("SELECT rowid, kind, data FROM entries_fts WHERE entries_fts MATCH ?", (q,)).fetchall()
     conn.close()
     return [dict(id=r[0], kind=r[1], data=r[2]) for r in rows]
+
+
+def ingest_text(text: str, meta: Dict[str, Any] | None = None) -> None:
+    """Ingest long text using dynamic chunking and store each chunk."""
+    ch = DynamicChunker(max_tokens=800, overlap_tokens=80)
+    for idx, chunk in enumerate(ch.chunk(text)):
+        add_entry(kind="kb_chunk", chunk_index=idx, text=chunk, meta=meta or {})
 
 
 def get(entry_id: int) -> dict:
