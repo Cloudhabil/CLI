@@ -1,13 +1,17 @@
 from __future__ import annotations
-import argparse, json, subprocess
+import argparse
+import json
+import subprocess
 from pathlib import Path
 from typing import List, Dict, Any
 from budget_forcing import BudgetController
+
 
 def run_cmd(cmd: str) -> int:
     print(f"[bench] exec: {cmd}", flush=True)
     completed = subprocess.run(cmd, shell=True)
     return completed.returncode
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -40,6 +44,7 @@ def main():
 
     Path(args.out).write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(f"[bench] wrote {args.out}")
+
 
 if __name__ == "__main__":
     main()

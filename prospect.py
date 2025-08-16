@@ -9,10 +9,12 @@ from kb import add_entry
 
 load_dotenv(".env.local")
 
+
 def main():
     rate = int(os.environ.get("PROSPECT_RATE_LIMIT_PER_MIN", "12"))
     dry = os.environ.get("PROSPECT_DRY_RUN", "true").lower() == "true"
-    token = ensure_token(os.environ["GOOGLE_CLIENT_ID"], os.environ["GOOGLE_CLIENT_SECRET"], os.environ["GOOGLE_SCOPES"].split(","), Path(os.environ["GOOGLE_TOKEN_PATH"]))
+    token = ensure_token(os.environ["GOOGLE_CLIENT_ID"], os.environ["GOOGLE_CLIENT_SECRET"],
+                         os.environ["GOOGLE_SCOPES"].split(","), Path(os.environ["GOOGLE_TOKEN_PATH"]))
     gmail = GmailClient(token, dry_run=dry)
     sender = os.environ["PROSPECT_SENDER_EMAIL"]
     with open("leads.csv", newline="") as f:
