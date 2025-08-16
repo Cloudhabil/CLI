@@ -6,7 +6,8 @@ from fastapi.testclient import TestClient
 import bus_server
 
 
-def test_publish_and_get(monkeypatch):
+def test_publish_get_cycle(monkeypatch):
+    """Publish and retrieve a message via the bus."""
     recorded = []
 
     def fake_add_entry(**kw):
