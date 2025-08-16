@@ -1,13 +1,17 @@
 ﻿#!/usr/bin/env python3
-import os, subprocess, time
+import os
+import subprocess
+import time
 from urllib.parse import urlparse
 import requests
 
 DEF_TIMEOUT = 90
 
+
 def _port_from_url(base_url: str) -> int:
     u = urlparse(base_url)
     return u.port or (8081 if "8081" in base_url else 8080)
+
 
 def _is_alive(base_url: str) -> bool:
     try:
@@ -15,6 +19,7 @@ def _is_alive(base_url: str) -> bool:
         return r.ok
     except Exception:
         return False
+
 
 def ensure_server(key: str, cfg: dict, wait=DEF_TIMEOUT) -> bool:
     """
@@ -26,8 +31,8 @@ def ensure_server(key: str, cfg: dict, wait=DEF_TIMEOUT) -> bool:
         return True
 
     server = cfg["server_path"]
-    model  = cfg["model_path"]
-    port   = _port_from_url(cfg["base_url"])
+    model = cfg["model_path"]
+    port = _port_from_url(cfg["base_url"])
 
     args = [
         server, "-m", model,
@@ -37,9 +42,12 @@ def ensure_server(key: str, cfg: dict, wait=DEF_TIMEOUT) -> bool:
         "--host", "127.0.0.1",
         "--no-webui"
     ]
-    if cfg.get("threads"):  args += ["-t", str(cfg["threads"])]
-    if cfg.get("n_batch"):  args += ["-b", str(cfg["n_batch"])]
-    if cfg.get("n_ubatch"): args += ["-ub", str(cfg["n_ubatch"])]
+    if cfg.get("threads"):
+        args += ["-t", str(cfg["threads"])]
+    if cfg.get("n_batch"):
+        args += ["-b", str(cfg["n_batch"])]
+    if cfg.get("n_ubatch"):
+        args += ["-ub", str(cfg["n_ubatch"])]
 
     creationflags = 0x08000000  # CREATE_NO_WINDOW (Windows)
     try:

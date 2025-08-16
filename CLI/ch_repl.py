@@ -1,5 +1,11 @@
 ﻿#!/usr/bin/env python3
-import os, sys, re, time, uuid, argparse, subprocess
+import os
+import sys
+import re
+import time
+import uuid
+import argparse
+import subprocess
 from pathlib import Path
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
@@ -57,6 +63,7 @@ STYLE = Style.from_dict({
     "meta": "italic ansibrightblack",
 })
 
+
 def system_for(key: str) -> str:
     if key == "generator_primary":
         return SYS_QWEN
@@ -65,10 +72,12 @@ def system_for(key: str) -> str:
     # router en modo chat (no clasificamos aquÃ­; para clasificar usa la CLI normal)
     return "Eres un asistente tÃ©cnico conciso. Responde claro y breve."
 
+
 def send_message(model_key: str, text: str) -> str:
     if model_key == "router":
         return call_router(system_for("router"), text, CFG["router"].get("params", {}))
     return call_http(model_key, system_for(model_key), text)
+
 
 def extract_first_code(md_text: str, lang: str = "python"):
     m = re.search(rf"```{lang}\s*([\s\S]*?)```", md_text, re.IGNORECASE)
@@ -76,6 +85,7 @@ def extract_first_code(md_text: str, lang: str = "python"):
         return m.group(1).strip()
     m = re.search(r"```([\s\S]*?)```", md_text)
     return m.group(1).strip() if m else None
+
 
 def run_exec_for_task(slug: str):
     tdir = Path(__file__).resolve().parent / "tasks" / slug
@@ -86,7 +96,8 @@ def run_exec_for_task(slug: str):
     last = outs[-1].read_text(encoding="utf-8")
     code = extract_first_code(last, "python")
     if not code:
-        console.print(f"[yellow]{TEXTS.get('no_code_block', 'No encontr\u00e9 bloque ```python``` en el \u00faltimo output.')}[/yellow]")
+        console.print(
+            f"[yellow]{TEXTS.get('no_code_block', 'No encontr\u00e9 bloque ```python``` en el \u00faltimo output.')}[/yellow]")
         return
     scratch = tdir / "scratch"
     scratch.mkdir(parents=True, exist_ok=True)
@@ -99,22 +110,26 @@ def run_exec_for_task(slug: str):
     console.rule("STDERR")
     console.print(proc.stderr or "")
 
+
 def main():
     parser = argparse.ArgumentParser(description="REPL tipo Gemini usando CodeGemma/Qwen/DeepSeek")
-    parser.add_argument("--model", choices=["router","qwen","deepseek"], default="router")
+    parser.add_argument("--model", choices=["router", "qwen", "deepseek"], default="router")
     parser.add_argument("--task", default=f"repl-{time.strftime('%Y%m%d-%H%M%S')}")
     args = parser.parse_args()
 
-    model_key = {"router":"router","qwen":"generator_primary","deepseek":"assistant_qc"}[args.model]
+    model_key = {"router": "router", "qwen": "generator_primary", "deepseek": "assistant_qc"}[args.model]
     slug = slugify(args.task)
     tdir = ensure_task_dir(slug)
 
     console.print(Panel.fit(Text(BANNER, justify="left"), border_style="magenta"))
-    console.print(f"[dim]Using: task [bold]{slug}[/bold]   env: no sandbox   model: [bold]{CFG[model_key]['name']}[/bold][/dim]")
-    console.print(f"[dim]{TEXTS.get('tip', 'Tip: escribe texto o usa comandos como /file, /model, /exec, /help')}[/dim]\n")
+    console.print(
+        f"[dim]Using: task [bold]{slug}[/bold]   env: no sandbox   model: [bold]{CFG[model_key]['name']}[/bold][/dim]")
+    console.print(
+        f"[dim]{TEXTS.get('tip', 'Tip: escribe texto o usa comandos como /file, /model, /exec, /help')}[/dim]\n")
 
     history = InMemoryHistory()
-    completer = WordCompleter(["/help","/model","/file","/task","/exec","/agent","/clear","/exit"], ignore_case=True)
+    completer = WordCompleter(["/help", "/model", "/file", "/task", "/exec",
+                              "/agent", "/clear", "/exit"], ignore_case=True)
     session = PromptSession(history=history, completer=completer)
 
     while True:
@@ -135,7 +150,8 @@ def main():
             if cmd == "/exit":
                 break
             if cmd == "/agent":
-                import shlex, subprocess
+                import shlex
+                import subprocess
                 agent_parts = shlex.split(user)
                 goal = " ".join(agent_parts[1:]) or "Show directory"
                 console.print(f"[agent] goal = {goal}")
@@ -150,10 +166,10 @@ def main():
                 console.print(Panel.fit(Text(BANNER, justify="left"), border_style="magenta"))
                 continue
             if cmd == "/model":
-                if len(parts) < 2 or parts[1] not in ["router","qwen","deepseek"]:
+                if len(parts) < 2 or parts[1] not in ["router", "qwen", "deepseek"]:
                     console.print("[yellow]Uso: /model router|qwen|deepseek[/yellow]")
                     continue
-                model_key = {"router":"router","qwen":"generator_primary","deepseek":"assistant_qc"}[parts[1]]
+                model_key = {"router": "router", "qwen": "generator_primary", "deepseek": "assistant_qc"}[parts[1]]
                 console.print(f"âœ” Modelo activo: [bold]{CFG[model_key]['name']}[/bold]")
                 continue
             if cmd == "/task":
@@ -184,7 +200,8 @@ def main():
                 run_exec_for_task(slug)
                 continue
 
-            console.print(f"[yellow]{TEXTS.get('unrecognized_command', 'Comando no reconocido. /help para ver opciones.')}[/yellow]")
+            console.print(
+                f"[yellow]{TEXTS.get('unrecognized_command', 'Comando no reconocido. /help para ver opciones.')}[/yellow]")
             continue
 
         # Mensaje normal -> envÃ­a al modelo activo
@@ -194,8 +211,6 @@ def main():
         out.write_text(reply, encoding="utf-8")
         console.print(Panel(reply, title=f"Response â€” {CFG[model_key]['name']}", border_style="cyan"))
 
+
 if __name__ == "__main__":
     main()
-
-
-

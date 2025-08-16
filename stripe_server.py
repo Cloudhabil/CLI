@@ -32,4 +32,5 @@ async def webhook(request: Request):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("stripe_server:app", host=os.environ.get("STRIPE_BIND", "0.0.0.0"), port=int(os.environ.get("STRIPE_PORT", 7077)))
+    uvicorn.run("stripe_server:app", host=os.environ.get("STRIPE_BIND", "0.0.0.0"),
+                port=int(os.environ.get("STRIPE_PORT", 7077)))

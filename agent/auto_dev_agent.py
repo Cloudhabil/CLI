@@ -1,4 +1,10 @@
-import json, os, subprocess, datetime, uuid, pathlib, shutil
+import json
+import os
+import subprocess
+import datetime
+import uuid
+import pathlib
+import shutil
 from typing import List, Dict, Any
 from dotenv import load_dotenv
 from rich.console import Console
@@ -14,12 +20,14 @@ LOGS = ROOT / "agent" / "logs"
 PROJECT = ROOT / "project"
 TEMPLATES = ROOT / "app_templates"
 
+
 def log_event(kind: str, data: Dict[str, Any]):
     LOGS.mkdir(parents=True, exist_ok=True)
     evt = {"ts": datetime.datetime.now().isoformat(), "kind": kind, **data}
     p = LOGS / f"{datetime.datetime.now().date()}.log.jsonl"
     with p.open("a", encoding="utf-8") as f:
         f.write(json.dumps(evt, ensure_ascii=False) + "\n")
+
 
 def read_new_conversations() -> List[Dict[str, Any]]:
     STATE.mkdir(parents=True, exist_ok=True)
@@ -35,6 +43,7 @@ def read_new_conversations() -> List[Dict[str, Any]]:
     offset_file.write_text(json.dumps({"lines": len(lines)}))
     return new
 
+
 def choose_task(items: List[Dict[str, Any]]) -> str:
     # naive prioritization: look for trigger keywords first
     triggers = [
@@ -46,16 +55,18 @@ def choose_task(items: List[Dict[str, Any]]) -> str:
     ]
     scored = []
     for it in reversed(items):
-        txt = it.get("text","")
-        score = max((fuzz.partial_ratio(txt.lower(), k)*w/100 for k,w in triggers), default=0)
+        txt = it.get("text", "")
+        score = max((fuzz.partial_ratio(txt.lower(), k)*w/100 for k, w in triggers), default=0)
         scored.append((score, txt))
     scored.sort(reverse=True)
     return scored[0][1] if scored else ""
+
 
 def render_app_py(context: Dict[str, Any]) -> str:
     env = Environment(loader=FileSystemLoader(str(TEMPLATES)))
     tpl = env.get_template("app.py.j2")
     return tpl.render(**context)
+
 
 def write_file_rel(path: str, content: str):
     p = ROOT / path
@@ -66,26 +77,30 @@ def write_file_rel(path: str, content: str):
     p.write_text(content, encoding="utf-8")
     return True
 
+
 def git(cmd: List[str]) -> str:
     return subprocess.check_output(["git"]+cmd, cwd=ROOT, text=True).strip()
 
+
 def ensure_git_identity():
-    name = os.getenv("GIT_AUTHOR_NAME","Cloudhabil Bot")
-    email = os.getenv("GIT_AUTHOR_EMAIL","bot@cloudhabil.local")
-    subprocess.check_call(["git","config","user.name",name], cwd=ROOT)
-    subprocess.check_call(["git","config","user.email",email], cwd=ROOT)
+    name = os.getenv("GIT_AUTHOR_NAME", "Cloudhabil Bot")
+    email = os.getenv("GIT_AUTHOR_EMAIL", "bot@cloudhabil.local")
+    subprocess.check_call(["git", "config", "user.name", name], cwd=ROOT)
+    subprocess.check_call(["git", "config", "user.email", email], cwd=ROOT)
+
 
 def open_pr(branch: str, title: str, body: str) -> str:
     # Use gh if available, else fallback to API via curl
     try:
         url = subprocess.check_output(
-            ["gh","pr","create","--title",title,"--body",body,"--base",os.getenv("DEFAULT_BRANCH","main")],
+            ["gh", "pr", "create", "--title", title, "--body", body, "--base", os.getenv("DEFAULT_BRANCH", "main")],
             cwd=ROOT, text=True
         ).strip()
         return url
     except Exception:
         # bare minimum fallback: push branch and instruct manual PR
         return f"(gh not found) Pushed {branch}. Open a PR on GitHub."
+
 
 @app.command()
 def main(dry_run: bool = typer.Option(False, "--dry-run", help="Do not commit or open PR")):
@@ -116,14 +131,14 @@ def main(dry_run: bool = typer.Option(False, "--dry-run", help="Do not commit or
         console.print("[green]No changes to app.py. Skipping PR.[/green]")
         return
     ensure_git_identity()
-    base = os.getenv("DEFAULT_BRANCH","main")
+    base = os.getenv("DEFAULT_BRANCH", "main")
     git(["checkout", base])
-    git(["pull","--ff-only"])
+    git(["pull", "--ff-only"])
     branch = f"auto/architect/{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
-    git(["checkout","-b", branch])
-    git(["add","app.py"])
-    git(["commit","-m", f"feat(app): architect update app.py from conversations [{uuid.uuid4().hex[:8]}]"])
-    git(["push","-u","origin", branch])
+    git(["checkout", "-b", branch])
+    git(["add", "app.py"])
+    git(["commit", "-m", f"feat(app): architect update app.py from conversations [{uuid.uuid4().hex[:8]}]"])
+    git(["push", "-u", "origin", branch])
     pr_title = "feat(app): Architect auto-update to app.py"
     pr_body = f"""Automated change by Architect Agent.
 
@@ -138,6 +153,7 @@ Logs: see agent/logs/
     url = open_pr(branch, pr_title, pr_body)
     console.print(f"[bold green]PR opened:[/bold green] {url}")
     log_event("pr", {"branch": branch, "url": url})
+
 
 if __name__ == "__main__":
     app()
