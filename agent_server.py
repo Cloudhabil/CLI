@@ -1,8 +1,10 @@
 import os
 import threading
+from pathlib import Path
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
+import yaml
 
 from models.backend import make_client
 from kb import add_entry
@@ -35,6 +37,10 @@ class ChatRequest(BaseModel):
 class SettingsRequest(BaseModel):
     type: str
     language: str
+
+
+class LayoutRequest(BaseModel):
+    layout: Optional[Dict[str, Any]] = None
 
 
 @app.on_event("startup")
@@ -87,6 +93,23 @@ async def publish(req: ChatRequest):
 async def update_settings(user_id: str, req: SettingsRequest):
     user_settings[user_id] = req.dict()
     return {"status": "ok", "user_id": user_id, "settings": user_settings[user_id]}
+
+
+@app.put("/profile/{user_id}/layout")
+async def update_layout(user_id: str, req: LayoutRequest):
+    base = Path("profile/layouts")
+    base.mkdir(parents=True, exist_ok=True)
+    path = base / f"{user_id}.yaml"
+    if req.layout is None:
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                data = yaml.safe_load(f) or {}
+        else:
+            data = {}
+        return {"status": "ok", "user_id": user_id, "layout": data}
+    with open(path, "w", encoding="utf-8") as f:
+        yaml.safe_dump(req.layout, f)
+    return {"status": "saved", "user_id": user_id, "layout": req.layout}
 
 
 if __name__ == "__main__":
