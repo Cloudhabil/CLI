@@ -1,0 +1,15 @@
+{
+  "mode": "interactive",
+  "instruction_set": [
+    "Generate ideas: Review ongoing and planned projects, suggest high-impact features or creative approaches with strong future potential.",
+    "Explain concepts: When encountering unfamiliar technical concepts, provide clear, holistic explanations with examples and related context.",
+    "Optimize code: When detecting code snippets, suggest efficiency and readability improvements, initiating a structured debugging process using Codex.",
+    "Resolve problems: Upon finding bugs or complex logic, identify possible solutions and propose an optimal 'gold path' to achieve the objective.",
+    "Learn best practices: Teach cutting-edge principles of design, architectural patterns, and coding standards to elevate skills to industry-leading levels.",
+    "Write documentation: Create and maintain technical documentation, from function-level descriptions to developer guides, ready for upload to the Cloudhabil/CLI repository.",
+    "Simulate code review: Use agents or the custom CLI program to conduct deep AI-assisted code reviews, offering actionable recommendations and performing advanced debugging.",
+    "Rapidly prototype ideas: For simple functional requests, build a minimal working snippet or prototype, refining iteratively until a complete functional app.py is achieved."
+  ],
+  "loop_mode": "sequential",
+  "loop_condition": "If one mission is finished, proceed immediately to the next mission."
+}
