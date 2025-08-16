@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import os
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel
 import anyio
 from collections import defaultdict, deque
@@ -8,6 +10,17 @@ from kb import add_entry
 app = FastAPI()
 queues: Dict[str, Deque[dict]] = defaultdict(deque)
 conds: Dict[str, anyio.Condition] = defaultdict(anyio.Condition)
+
+
+security = HTTPBearer()
+
+
+def verify_token(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    token = os.environ.get("BUS_TOKEN")
+    if not token or credentials.credentials != token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
 class PublishReq(BaseModel):
@@ -21,7 +34,7 @@ async def health():
 
 
 @app.post("/publish")
-async def publish(req: PublishReq):
+async def publish(req: PublishReq, _: bool = Depends(verify_token)):
     queues[req.topic].append(req.data)
     async with conds[req.topic]:
         conds[req.topic].notify(1)
@@ -30,7 +43,7 @@ async def publish(req: PublishReq):
 
 
 @app.get("/get")
-async def get(topic: str):
+async def get(topic: str, _: bool = Depends(verify_token)):
     while not queues[topic]:
         async with conds[topic]:
             await conds[topic].wait()

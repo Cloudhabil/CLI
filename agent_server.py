@@ -26,6 +26,7 @@ config_name = os.environ.get("MODEL_NAME", "llama3.1:latest")
 client = make_client(config_model, config_endpoint, config_name)
 
 BUS_URL = os.environ.get("BUS_URL")
+BUS_TOKEN = os.environ.get("BUS_TOKEN")
 subscriber: Optional[BusClient] = None
 history: List[Dict[str, str]] = []
 user_settings: Dict[str, Dict[str, str]] = {}
@@ -74,7 +75,7 @@ class BadgeRequest(BaseModel):
 async def startup_event():
     if BUS_URL:
         global subscriber
-        subscriber = BusClient(BUS_URL, role, handle_bus_message)
+        subscriber = BusClient(BUS_URL, role, handle_bus_message, token=BUS_TOKEN)
         threading.Thread(target=subscriber.run, daemon=True).start()
     init_cron()
 
