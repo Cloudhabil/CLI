@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tkinter as tk
 from typing import List
+from profile.badges import badge_paths, frame_paths
 
 
 class PixelAvatarEditor(tk.Tk):
@@ -31,6 +32,17 @@ class PixelAvatarEditor(tk.Tk):
             self, width=size * pixel_size, height=size * pixel_size, bg="white"
         )
         self.canvas.grid(row=0, column=0, columnspan=len(self.palette))
+        self.reward_images: List[tk.PhotoImage] = []
+        for idx, path in enumerate(frame_paths(user_id)):
+            if Path(path).exists():
+                img = tk.PhotoImage(file=path)
+                self.reward_images.append(img)
+                self.canvas.create_image(0, 0, anchor="nw", image=img)
+        for idx, path in enumerate(badge_paths(user_id)):
+            if Path(path).exists():
+                img = tk.PhotoImage(file=path)
+                self.reward_images.append(img)
+                self.canvas.create_image(5 + idx * 20, 5, anchor="nw", image=img)
         for y in range(size):
             for x in range(size):
                 x0 = x * pixel_size

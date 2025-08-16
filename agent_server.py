@@ -11,6 +11,7 @@ from models.backend import make_client
 from kb import add_entry
 from bus_client import BusClient
 from profile.points import award_points, get_rankings
+from profile.badges import assign_badge
 from integrations.social_hooks import init_cron
 
 app = FastAPI()
@@ -49,6 +50,11 @@ class LayoutRequest(BaseModel):
 class PixelAvatarRequest(BaseModel):
     palette: List[str]
     pixels: List[List[int]]
+
+
+class BadgeRequest(BaseModel):
+    badge_id: Optional[str] = None
+    frame_id: Optional[str] = None
 
 
 @app.on_event("startup")
@@ -131,6 +137,12 @@ async def save_pixel_avatar(user_id: str, req: PixelAvatarRequest):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(req.dict(), f)
     return {"status": "saved", "user_id": user_id}
+
+
+@app.post("/profile/{user_id}/badge")
+async def grant_badge(user_id: str, req: BadgeRequest):
+    rewards = assign_badge(user_id, req.badge_id, req.frame_id)
+    return {"status": "ok", "user_id": user_id, **rewards}
 
 
 @app.get("/leaderboard")
