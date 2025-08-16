@@ -10,6 +10,8 @@ import json
 from models.backend import make_client
 from kb import add_entry
 from bus_client import BusClient
+from profile.points import award_points, get_rankings
+from integrations.social_hooks import init_cron
 
 app = FastAPI()
 
@@ -55,6 +57,7 @@ async def startup_event():
         global subscriber
         subscriber = BusClient(BUS_URL, role, handle_bus_message)
         threading.Thread(target=subscriber.run, daemon=True).start()
+    init_cron()
 
 
 def handle_bus_message(msg: Dict[str, str]):
@@ -72,6 +75,8 @@ async def chat(req: ChatRequest):
     reply = client.chat(history)
     history.append({"role": "assistant", "content": reply})
     add_entry(kind="chat", role=role, sender=req.sender, message=req.message, reply=reply)
+    if req.sender:
+        award_points(req.sender, "chat")
     return {"reply": reply}
 
 
@@ -126,6 +131,12 @@ async def save_pixel_avatar(user_id: str, req: PixelAvatarRequest):
     with open(path, "w", encoding="utf-8") as f:
         json.dump(req.dict(), f)
     return {"status": "saved", "user_id": user_id}
+
+
+@app.get("/leaderboard")
+async def leaderboard():
+    rankings = get_rankings()
+    return {"leaderboard": [{"user_id": uid, "points": pts} for uid, pts in rankings]}
 
 
 if __name__ == "__main__":
