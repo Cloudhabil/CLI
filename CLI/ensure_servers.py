@@ -7,6 +7,7 @@ except Exception:
 
 from backend_manager import ensure_server
 
+
 def main():
     if HAVE_LLAMA:
         try:
@@ -24,6 +25,7 @@ def main():
             print(f"{key}: {'OK' if ok else 'FAIL'}")
         except Exception as e:
             print(f"{key}: ERROR {e}")
+
 
 if __name__ == "__main__":
     main()

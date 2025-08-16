@@ -1,16 +1,25 @@
-﻿#!/usr/bin/env python3
-import argparse, json, os, re, sys, time, uuid
+#!/usr/bin/env python3
+import argparse
+import json
+import os
+import re
+import sys
+import time
+import uuid
 from pathlib import Path
-import requests, yaml
+import requests
+import yaml
 
 ROOT = Path(__file__).resolve().parent
 CFG = yaml.safe_load((ROOT / "configs" / "models.yaml").read_text(encoding="utf-8"))
 
+
 def load_prompt(path):
     return (ROOT / "prompts" / path).read_text(encoding="utf-8")
 
-SYS_ROUTER   = load_prompt("system_router.md")
-SYS_QWEN     = load_prompt("system_qwen.md")
+
+SYS_ROUTER = load_prompt("system_router.md")
+SYS_QWEN = load_prompt("system_qwen.md")
 SYS_DEEPSEEK = load_prompt("system_deepseek.md")
 
 # --- llama_cpp availability (in-process router) --------------------------------
@@ -21,16 +30,19 @@ except Exception:
     Llama = None
     _HAVE_LLAMA_RAW = False
 
+
 def _truthy_env(name, default=False):
     v = os.getenv(name, "")
     if not v:
         return default
-    return v.strip().lower() in ("1","true","yes","y","on")
+    return v.strip().lower() in ("1", "true", "yes", "y", "on")
 
 # Force HTTP router if:
 # - CH_FORCE_ROUTER_HTTP is truthy, OR
 # - ROUTER_BASE_URL is provided in the environment, OR
 # - CFG["router"]["model_path"] is missing/nonexistent.
+
+
 def _should_use_http_router():
     if _truthy_env("CH_FORCE_ROUTER_HTTP", False):
         return True
@@ -42,10 +54,13 @@ def _should_use_http_router():
         return True
     return False
 
+
 HAVE_LLAMA = _HAVE_LLAMA_RAW and not _should_use_http_router()
 _ROUTER_LLM = None
 
 # --- Config with environment overrides ----------------------------------------
+
+
 def _cfg_with_env(key: str) -> dict:
     """
     Returns model config merged with environment overrides.
@@ -87,6 +102,8 @@ def _cfg_with_env(key: str) -> dict:
     return c
 
 # --- Router (in-process via llama_cpp) -----------------------------------------
+
+
 def _get_router():
     global _ROUTER_LLM
     if _ROUTER_LLM is None:
@@ -103,6 +120,7 @@ def _get_router():
         )
     return _ROUTER_LLM
 
+
 def _make_url(base_url: str) -> str:
     """
     Normalize to OpenAI-compatible /v1/chat/completions.
@@ -114,6 +132,8 @@ def _make_url(base_url: str) -> str:
     return f"{b}/v1/chat/completions"
 
 # --- HTTP calls ----------------------------------------------------------------
+
+
 def _auth_headers(model_key: str) -> dict:
     cfg = _cfg_with_env(model_key)
     api_key = cfg.get("api_key") or ""
@@ -129,6 +149,7 @@ def _auth_headers(model_key: str) -> dict:
     if api_key:
         headers["Authorization"] = f"Bearer {api_key}"
     return headers
+
 
 def call_http(model_key: str, system_prompt: str, user_prompt: str) -> str:
     cfg = _cfg_with_env(model_key)
@@ -160,6 +181,8 @@ def call_http(model_key: str, system_prompt: str, user_prompt: str) -> str:
     return data["choices"][0]["message"]["content"]
 
 # Router caller that prefers in-process llama if available, else HTTP
+
+
 def call_router(system_prompt: str, user_prompt: str, params: dict) -> str:
     if HAVE_LLAMA:
         llm = _get_router()
@@ -177,26 +200,35 @@ def call_router(system_prompt: str, user_prompt: str, params: dict) -> str:
     return call_http("router", system_prompt, user_prompt)
 
 # --- Task utils ----------------------------------------------------------------
+
+
 def ensure_task_dir(slug):
     tdir = ROOT / "tasks" / slug
     (tdir / "inputs").mkdir(parents=True, exist_ok=True)
     (tdir / "outputs").mkdir(parents=True, exist_ok=True)
     return tdir
 
+
 def slugify(s):
     s = re.sub(r"[^\w\-]+", "-", s.lower()).strip("-")
     return s or f"tarea-{uuid.uuid4().hex[:6]}"
 
+
 def build_user_prompt(context, task, constraints, format_hint=True):
     parts = []
-    if context: parts.append(f"# Contexto\n{context}")
-    if task: parts.append(f"# Tarea\n{task}")
-    if constraints: parts.append(f"# Restricciones\n{constraints}")
+    if context:
+        parts.append(f"# Contexto\n{context}")
+    if task:
+        parts.append(f"# Tarea\n{task}")
+    if constraints:
+        parts.append(f"# Restricciones\n{constraints}")
     if format_hint:
         parts.append("# Formato de salida\nDiff unificado y verificación breve.")
     return "\n\n".join(parts)
 
 # --- Routing -------------------------------------------------------------------
+
+
 def route(task_text):
     router_cfg = _cfg_with_env("router")
     try:
@@ -205,18 +237,20 @@ def route(task_text):
     except Exception:
         lower = task_text.lower()
         if any(k in lower for k in ["refactor", "migr", "test", "integr"]):
-            return "generator_primary", {"tipo":"heuristica","tam":"M","criticidad":"media"}
+            return "generator_primary", {"tipo": "heuristica", "tam": "M", "criticidad": "media"}
         if any(k in lower for k in ["coment", "doc", "snippet", "fix menor", "peque"]):
-            return "assistant_qc", {"tipo":"heuristica","tam":"S","criticidad":"baja"}
-        return "generator_primary", {"tipo":"desconocido","tam":"M","criticidad":"media"}
-    tipo = meta.get("tipo","desconocido")
-    if tipo in ["refactor","integracion","tests","migracion"]:
+            return "assistant_qc", {"tipo": "heuristica", "tam": "S", "criticidad": "baja"}
+        return "generator_primary", {"tipo": "desconocido", "tam": "M", "criticidad": "media"}
+    tipo = meta.get("tipo", "desconocido")
+    if tipo in ["refactor", "integracion", "tests", "migracion"]:
         return "generator_primary", meta
-    if tipo in ["snippet","comentado","fix_menor","doc"]:
+    if tipo in ["snippet", "comentado", "fix_menor", "doc"]:
         return "assistant_qc", meta
     return "generator_primary", meta
 
 # --- Commands ------------------------------------------------------------------
+
+
 def cmd_new(args):
     slug = slugify(args.name)
     tdir = ensure_task_dir(slug)
@@ -225,11 +259,12 @@ def cmd_new(args):
     (tdir/"inputs"/"restricciones.md").write_text(args.constraints or "", encoding="utf-8")
     print(f"✅ Tarea creada: tasks/{slug}")
 
+
 def _run_to_model(key, user_prompt, tdir, meta, system):
     model_cfg = _cfg_with_env(key)
     ts = time.strftime("%Y%m%d-%H%M%S")
     out_path = tdir/"outputs"/f"{ts}-{model_cfg.get('name', key)}.md"
-    print(f"➡️  Modelo: {model_cfg.get('name', key)} | Motivo: {meta.get('tipo','n/a')} | Tam: {meta.get('tam','?')}")
+    print(f"➡️  Modelo: {model_cfg.get('name', key)} | Motivo: {meta.get('tipo', 'n/a')} | Tam: {meta.get('tam', '?')}")
 
     content = call_http(key, system, user_prompt)
     out_path.write_text(content, encoding="utf-8")
@@ -242,22 +277,26 @@ def _run_to_model(key, user_prompt, tdir, meta, system):
         patch_path.write_text(patch, encoding="utf-8")
         print(f"🧩 Diff extraído: {patch_path}")
 
+
 def cmd_run(args):
     slug = slugify(args.name)
     tdir = ensure_task_dir(slug)
     context = (tdir/"inputs"/"context.md").read_text(encoding="utf-8") if (tdir/"inputs"/"context.md").exists() else ""
-    task = (tdir/"inputs"/"tarea.md").read_text(encoding="utf-8") if (tdir/"inputs"/"tarea.md").exists() else args.task or ""
-    constraints = (tdir/"inputs"/"restricciones.md").read_text(encoding="utf-8") if (tdir/"inputs"/"restricciones.md").exists() else args.constraints or ""
+    task = (tdir/"inputs"/"tarea.md").read_text(encoding="utf-8") if (tdir /
+                                                                      "inputs"/"tarea.md").exists() else args.task or ""
+    constraints = (tdir/"inputs"/"restricciones.md").read_text(encoding="utf-8") if (tdir /
+                                                                                     "inputs"/"restricciones.md").exists() else args.constraints or ""
     user_prompt = build_user_prompt(context, task, constraints)
 
-    if args.model in ["qwen","deepseek"]:
-        key = {"qwen":"generator_primary","deepseek":"assistant_qc"}[args.model]
-        meta = {"tipo":"forzado","tam":"S","criticidad":"media"}
+    if args.model in ["qwen", "deepseek"]:
+        key = {"qwen": "generator_primary", "deepseek": "assistant_qc"}[args.model]
+        meta = {"tipo": "forzado", "tam": "S", "criticidad": "media"}
     else:
         key, meta = route(task)
 
-    system = SYS_QWEN if key=="generator_primary" else SYS_DEEPSEEK
+    system = SYS_QWEN if key == "generator_primary" else SYS_DEEPSEEK
     _run_to_model(key, user_prompt, tdir, meta, system)
+
 
 def cmd_qa(args):
     tdir = ROOT/"tasks"/args.slug
@@ -267,7 +306,8 @@ def cmd_qa(args):
         return
     last = outs[-1].read_text(encoding="utf-8")
     review_prompt = f"# Salida previa\n\n{last}\n\n# Instruccion\nRevisa de forma concisa y sugiere cambios mínimos."
-    _run_to_model("assistant_qc", review_prompt, tdir, {"tipo":"qa","tam":"S"}, SYS_DEEPSEEK)
+    _run_to_model("assistant_qc", review_prompt, tdir, {"tipo": "qa", "tam": "S"}, SYS_DEEPSEEK)
+
 
 def cmd_apply(args):
     tdir = ROOT/"tasks"/args.slug
@@ -278,6 +318,7 @@ def cmd_apply(args):
     last_patch = patches[-1]
     print("Sugerencia para aplicar en tu repo (desde la raíz del proyecto destino):")
     print(f"git apply \"{last_patch}\"")
+
 
 def cmd_doctor(args):
     print("🔍 ch-cli doctor: comprobando router y subservers...")
@@ -295,23 +336,24 @@ def cmd_doctor(args):
             _is_alive = None
         r_cfg = _cfg_with_env("router")
         if _is_alive:
-            ok = _is_alive(r_cfg.get("base_url",""))
-            print(f" - router (HTTP): {'OK' if ok else 'DOWN'} @ {r_cfg.get('base_url','')}")
+            ok = _is_alive(r_cfg.get("base_url", ""))
+            print(f" - router (HTTP): {'OK' if ok else 'DOWN'} @ {r_cfg.get('base_url', '')}")
         else:
-            print(f" - router (HTTP): base_url={r_cfg.get('base_url','')} (no _is_alive helper)")
+            print(f" - router (HTTP): base_url={r_cfg.get('base_url', '')} (no _is_alive helper)")
 
     # Subservers
     try:
         from backend_manager import _is_alive
     except Exception:
         _is_alive = None
-    for key in ["generator_primary","assistant_qc"]:
+    for key in ["generator_primary", "assistant_qc"]:
         cfg = _cfg_with_env(key)
         if _is_alive:
-            ok = _is_alive(cfg.get("base_url",""))
-            print(f" - {cfg.get('name', key)}: {'OK' if ok else 'DOWN'} @ {cfg.get('base_url','')}")
+            ok = _is_alive(cfg.get("base_url", ""))
+            print(f" - {cfg.get('name', key)}: {'OK' if ok else 'DOWN'} @ {cfg.get('base_url', '')}")
         else:
-            print(f" - {cfg.get('name', key)}: base_url={cfg.get('base_url','')} (no _is_alive helper)")
+            print(f" - {cfg.get('name', key)}: base_url={cfg.get('base_url', '')} (no _is_alive helper)")
+
 
 def main():
     p = argparse.ArgumentParser(prog="ch-cli", description="Cloudhabil Dev CLI")
@@ -328,7 +370,7 @@ def main():
     p_run.add_argument("--name", required=True, help="Slug de tarea (se crea si no existe)")
     p_run.add_argument("--task", default="")
     p_run.add_argument("--constraints", default="")
-    p_run.add_argument("--model", choices=["auto","qwen","deepseek"], default="auto")
+    p_run.add_argument("--model", choices=["auto", "qwen", "deepseek"], default="auto")
     p_run.set_defaults(func=cmd_run)
 
     p_qa = sub.add_parser("qa", help="Revisión con DeepSeek")
@@ -344,8 +386,10 @@ def main():
 
     args = p.parse_args()
     if not hasattr(args, "func"):
-        p.print_help(); sys.exit(1)
+        p.print_help()
+        sys.exit(1)
     args.func(args)
+
 
 if __name__ == "__main__":
     main()

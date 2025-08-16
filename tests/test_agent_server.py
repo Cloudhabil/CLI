@@ -1,3 +1,4 @@
+import agent_server
 import sys
 import types
 import json
@@ -41,8 +42,6 @@ badges_mod.assign_badge = assign_badge  # type: ignore[attr-defined]
 sys.modules["profile"] = profile_pkg
 sys.modules["profile.points"] = points_mod
 sys.modules["profile.badges"] = badges_mod
-
-import agent_server
 
 
 class DummyClient:

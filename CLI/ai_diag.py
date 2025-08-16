@@ -1,7 +1,15 @@
 # ai_diag.py
 # Herramienta de diagnóstico minimalista para CLIs/IA
 from __future__ import annotations
-import argparse, json, os, platform, shutil, subprocess, sys, textwrap, traceback
+import argparse
+import json
+import os
+import platform
+import shutil
+import subprocess
+import sys
+import textwrap
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -10,19 +18,24 @@ DEF_CACHE.mkdir(parents=True, exist_ok=True)
 PENDING = DEF_CACHE / "pending.json"          # marca de error sin resolver
 RESUMEN = DEF_CACHE / "last_error_summary.txt"
 
+
 def _nowstamp() -> str:
     return datetime.now().strftime("%Y%m%d-%H%M%S")
+
 
 def _writeln(fp, s=""):
     fp.write(s.rstrip("\n") + "\n")
 
+
 def _section(fp, title):
     _writeln(fp, f"\n== {title} ==")
+
 
 def _run(cmd: list[str]) -> tuple[int, str, str]:
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     out, err = p.communicate()
     return p.returncode, out, err
+
 
 def _collect_sistema(fp):
     _section(fp, "SISTEMA")
@@ -30,6 +43,7 @@ def _collect_sistema(fp):
     _writeln(fp, f"Python: {sys.version.split()[0]}")
     _writeln(fp, f"Exe: {sys.executable}")
     _writeln(fp, f"Arch: {platform.machine()}  ({platform.processor()})")
+
 
 def _collect_proyecto(fp, root: Path):
     _section(fp, "ARBOL DEL PROYECTO")
@@ -47,6 +61,7 @@ def _collect_proyecto(fp, root: Path):
     except Exception as e:
         _writeln(fp, f"(falló el tree: {e})")
 
+
 def _collect_archivos_interes(fp, root: Path):
     _section(fp, "SNIPPETS")
     targets = [
@@ -63,12 +78,14 @@ def _collect_archivos_interes(fp, root: Path):
             try:
                 with p.open("r", encoding="utf-8", errors="ignore") as rf:
                     for i, line in enumerate(rf):
-                        if i >= n: break
+                        if i >= n:
+                            break
                         fp.write(line)
             except Exception as e:
                 _writeln(fp, f"(no se pudo leer: {e})")
         else:
             _writeln(fp, "(no existe)")
+
 
 def _collect_python_env(fp):
     _section(fp, "PYTHON ENV")
@@ -81,7 +98,8 @@ def _collect_python_env(fp):
     except Exception as e:
         _writeln(fp, f"(pip freeze falló: {e})")
 
-def _collect_puertos(fp, ports=(8081,8082,8083)):
+
+def _collect_puertos(fp, ports=(8081, 8082, 8083)):
     _section(fp, "PUERTOS")
     info = []
     # 1) psutil si está disponible
@@ -102,15 +120,17 @@ def _collect_puertos(fp, ports=(8081,8082,8083)):
         except Exception as e:
             _writeln(fp, f"(no se pudieron enumerar puertos: {e})")
     if info:
-        for line in info: _writeln(fp, line)
+        for line in info:
+            _writeln(fp, line)
     else:
         _writeln(fp, "(sin coincidencias)")
+
 
 def _write_diag(task: str, cmd: list[str] | None, stdout: str, stderr: str, exc: Exception | None) -> Path:
     path = DEF_CACHE / f"diag-{_nowstamp()}.txt"
     root = Path(".").resolve()
     with path.open("w", encoding="utf-8") as fp:
-        _writeln(fp, f"### Cloudhabil DIAGNOSTICO { _nowstamp() }")
+        _writeln(fp, f"### Cloudhabil DIAGNOSTICO {_nowstamp()}")
         _writeln(fp, f"TASK: {task}")
         if cmd:
             _writeln(fp, "CMD : " + " ".join(cmd))
@@ -128,20 +148,22 @@ def _write_diag(task: str, cmd: list[str] | None, stdout: str, stderr: str, exc:
             _writeln(fp, "".join(traceback.format_exception(exc)))
     return path
 
+
 def _save_pending(task: str, diag_path: Path, err_summary: str):
     data = {"task": task, "diag": str(diag_path), "when": _nowstamp(), "summary": err_summary.strip()[:800]}
     PENDING.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
 
 def _cleanup_on_success(task: str):
     if not PENDING.exists():
         return
     try:
         data = json.loads(PENDING.read_text(encoding="utf-8"))
-        diag = Path(data.get("diag",""))
+        diag = Path(data.get("diag", ""))
         summary = textwrap.dedent(f"""
         Último error (resuelto): {data.get('when')}
         Task : {data.get('task')}
-        Nota : {data.get('summary','(sin resumen)')}
+        Nota : {data.get('summary', '(sin resumen)')}
         """).strip()
         RESUMEN.write_text(summary + "\n", encoding="utf-8")
         if diag.exists():
@@ -157,6 +179,7 @@ def _cleanup_on_success(task: str):
         # No bloquear la ejecución por limpieza
         pass
 
+
 def run_with_diag(task: str, cmd: list[str]) -> int:
     """Ejecuta un comando; si falla, guarda diagnóstico completo y deja marca 'pending'."""
     rc, out, err = _run(cmd)
@@ -169,6 +192,7 @@ def run_with_diag(task: str, cmd: list[str]) -> int:
         _cleanup_on_success(task)
     return rc
 
+
 def wrap_callable_with_diag(task: str, fn, *args, **kwargs) -> int:
     """Para envolver funciones Python directamente."""
     try:
@@ -180,6 +204,7 @@ def wrap_callable_with_diag(task: str, fn, *args, **kwargs) -> int:
     else:
         _cleanup_on_success(task)
         return int(ret)
+
 
 def _main():
     ap = argparse.ArgumentParser(description="AI diag helper (guarda logs en .cache/diag)")
@@ -209,6 +234,7 @@ def _main():
         _cleanup_on_success(args.task)
         print("Limpieza realizada (si había pendiente).")
         return 0
+
 
 if __name__ == "__main__":
     sys.exit(_main())
