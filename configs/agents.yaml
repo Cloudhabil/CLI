@@ -1,0 +1,14 @@
+admin:
+  model: codegemma
+  allow_role_adjustment: true
+  wake_order: [CEO, COO, CFO, CTO, CIO, CMO, CHRO, CPO, CLIENT]
+agents:
+  CEO:   { port: 7001, model: llama_instruct, prompt: prompts/CEO.md }
+  COO:   { port: 7002, model: llama_instruct, prompt: prompts/COO.md }
+  CFO:   { port: 7003, model: llama_instruct, prompt: prompts/CFO.md }
+  CTO:   { port: 7004, model: qwen_coder,    prompt: prompts/CTO.md }
+  CIO:   { port: 7005, model: llama_instruct, prompt: prompts/CIO.md }
+  CMO:   { port: 7006, model: llama_instruct, prompt: prompts/CMO.md }
+  CHRO:  { port: 7007, model: llama_instruct, prompt: prompts/CHRO.md }
+  CPO:   { port: 7008, model: llama_instruct, prompt: prompts/CPO.md }
+  CLIENT:{ port: 7009, model: llama_instruct, prompt: prompts/CLIENT.md }
