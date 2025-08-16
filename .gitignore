@@ -16,3 +16,5 @@ reports/
 runs/
 assets/badges/*.png
 assets/frames/*.png
+
+*.tar.gz
