@@ -1,13 +1,19 @@
 from typing import Callable
 from rich.console import Console
 from kb import last, search, add_entry
+from ui_texts import load_texts
 
 
-def main(route: Callable[[str, str, str], None], check_ceo: Callable[[str], str]):
+def main(
+    route: Callable[[str, str, str], None],
+    check_ceo: Callable[[str], str],
+    lang: str = "en",
+):
+    texts = load_texts(lang)
     console = Console()
     while True:
         try:
-            line = console.input("admin> ")
+            line = console.input(texts.get("prompt", "admin> "))
         except (EOFError, KeyboardInterrupt):
             break
         if not line.strip():
@@ -21,7 +27,7 @@ def main(route: Callable[[str, str, str], None], check_ceo: Callable[[str], str]
             agent, msg = rest.split("::", 1)
             if agent.strip().upper() == "CEO":
                 verdict = check_ceo(msg.strip())
-                console.print(f"policy: {verdict}")
+                console.print(f"{texts.get('policy', 'policy')}: {verdict}")
         elif line.startswith("kb last"):
             parts = line.split("::")
             n = int(parts[1]) if len(parts) > 1 else 5
@@ -36,4 +42,4 @@ def main(route: Callable[[str, str, str], None], check_ceo: Callable[[str], str]
             topic, text = rest.split("||", 1)
             add_entry(kind="memo", topic=topic.strip(), text=text.strip())
         else:
-            console.print("unknown command")
+            console.print(texts.get("unknown_command", "unknown command"))

@@ -19,6 +19,7 @@ client = make_client(config_model, config_endpoint, config_name)
 BUS_URL = os.environ.get("BUS_URL")
 subscriber: Optional[BusClient] = None
 history: List[Dict[str, str]] = []
+user_settings: Dict[str, Dict[str, str]] = {}
 
 prompt_path = os.environ.get("PROMPT_FILE")
 if prompt_path and os.path.exists(prompt_path):
@@ -29,6 +30,11 @@ if prompt_path and os.path.exists(prompt_path):
 class ChatRequest(BaseModel):
     sender: str = ""
     message: str
+
+
+class SettingsRequest(BaseModel):
+    type: str
+    language: str
 
 
 @app.on_event("startup")
@@ -75,6 +81,12 @@ async def publish(req: ChatRequest):
         await subscriber.publish(role, req.message)
     add_entry(kind="publish", role=role, data=req.message)
     return {"status": "published"}
+
+
+@app.patch("/profile/{user_id}/settings")
+async def update_settings(user_id: str, req: SettingsRequest):
+    user_settings[user_id] = req.dict()
+    return {"status": "ok", "user_id": user_id, "settings": user_settings[user_id]}
 
 
 if __name__ == "__main__":

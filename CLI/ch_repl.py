@@ -8,11 +8,13 @@ from prompt_toolkit.styles import Style
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+from ui_texts import load_texts
 
 # Reusamos la config y los callers de tu CLI
 from ch_cli import CFG, call_router, call_http, SYS_ROUTER, SYS_QWEN, SYS_DEEPSEEK, slugify, ensure_task_dir
 
 console = Console()
+TEXTS = load_texts(os.environ.get("LANG", "en"))
 
 BANNER = r"""
 â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
@@ -79,18 +81,18 @@ def run_exec_for_task(slug: str):
     tdir = Path(__file__).resolve().parent / "tasks" / slug
     outs = sorted((tdir / "outputs").glob("*.md"))
     if not outs:
-        console.print("[yellow]No hay salidas para ejecutar.[/yellow]")
+        console.print(f"[yellow]{TEXTS.get('no_outputs', 'No hay salidas para ejecutar.')}[/yellow]")
         return
     last = outs[-1].read_text(encoding="utf-8")
     code = extract_first_code(last, "python")
     if not code:
-        console.print("[yellow]No encontrÃ© bloque ```python``` en el Ãºltimo output.[/yellow]")
+        console.print(f"[yellow]{TEXTS.get('no_code_block', 'No encontr\u00e9 bloque ```python``` en el \u00faltimo output.')}[/yellow]")
         return
     scratch = tdir / "scratch"
     scratch.mkdir(parents=True, exist_ok=True)
     script = scratch / "main.py"
     script.write_text(code, encoding="utf-8")
-    console.print(f"[bold]â–¶ Ejecutando[/bold] {script}")
+    console.print(f"[bold]{TEXTS.get('exec_running', '\u25B6 Ejecutando')}[/bold] {script}")
     proc = subprocess.run([sys.executable, str(script)], cwd=scratch, capture_output=True, text=True, timeout=45)
     console.rule("STDOUT")
     console.print(proc.stdout or "")
@@ -109,7 +111,7 @@ def main():
 
     console.print(Panel.fit(Text(BANNER, justify="left"), border_style="magenta"))
     console.print(f"[dim]Using: task [bold]{slug}[/bold]   env: no sandbox   model: [bold]{CFG[model_key]['name']}[/bold][/dim]")
-    console.print("[dim]Tip: escribe texto o usa comandos como /file, /model, /exec, /help[/dim]\n")
+    console.print(f"[dim]{TEXTS.get('tip', 'Tip: escribe texto o usa comandos como /file, /model, /exec, /help')}[/dim]\n")
 
     history = InMemoryHistory()
     completer = WordCompleter(["/help","/model","/file","/task","/exec","/agent","/clear","/exit"], ignore_case=True)
@@ -119,7 +121,7 @@ def main():
         try:
             user = session.prompt("> ", style=STYLE)
         except (KeyboardInterrupt, EOFError):
-            console.print("\nSaliendoâ€¦")
+            console.print("\n" + TEXTS.get('exiting', 'Saliendoâ€¦'))
             break
 
         if not user.strip():
@@ -182,7 +184,7 @@ def main():
                 run_exec_for_task(slug)
                 continue
 
-            console.print("[yellow]Comando no reconocido. /help para ver opciones.[/yellow]")
+            console.print(f"[yellow]{TEXTS.get('unrecognized_command', 'Comando no reconocido. /help para ver opciones.')}[/yellow]")
             continue
 
         # Mensaje normal -> envÃ­a al modelo activo
