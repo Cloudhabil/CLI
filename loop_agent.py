@@ -9,11 +9,13 @@ from agents import (
 
 CONFIG_PATH = Path("config/instructions.json")
 
+
 def load_config():
     if not CONFIG_PATH.exists():
         print(f"Config not found: {CONFIG_PATH}")
         sys.exit(1)
     return json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+
 
 def prompt_yes_no(msg: str) -> bool:
     try:
@@ -21,6 +23,7 @@ def prompt_yes_no(msg: str) -> bool:
         return ans == "y"
     except EOFError:
         return False
+
 
 def run_interactive(instruction_set):
     idx = 0
@@ -33,6 +36,7 @@ def run_interactive(instruction_set):
             dispatch(task)
             print("✅ Mission completed.")
         idx = (idx + 1) % len(instruction_set)
+
 
 def dispatch(task: str):
     title = task.split(":")[0].strip().lower()
@@ -67,6 +71,7 @@ def dispatch(task: str):
     else:
         print("⚠️ Unrecognized mission; no-op.")
 
+
 def read_block_until_eof() -> str:
     lines = []
     while True:
@@ -78,6 +83,7 @@ def read_block_until_eof() -> str:
         lines.append(line)
     return "".join(lines)
 
+
 def main():
     cfg = load_config()
     mode = cfg.get("mode", "interactive")
@@ -88,6 +94,7 @@ def main():
     if mode != "interactive":
         print(f"Mode '{mode}' not supported in this script. Forcing interactive.")
     run_interactive(instruction_set)
+
 
 if __name__ == "__main__":
     main()

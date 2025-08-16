@@ -15,6 +15,7 @@ POINT_VALUES: Dict[str, int] = {
     "contribution": 10,
 }
 
+
 def _load_points() -> Dict[str, int]:
     """Load existing point totals from disk."""
     if POINTS_FILE.exists():
@@ -25,11 +26,13 @@ def _load_points() -> Dict[str, int]:
                 return {}
     return {}
 
+
 def _save_points(data: Dict[str, int]) -> None:
     """Persist point totals to disk."""
     POINTS_FILE.parent.mkdir(parents=True, exist_ok=True)
     with POINTS_FILE.open("w", encoding="utf-8") as fh:
         json.dump(data, fh)
+
 
 def award_points(user_id: str, reason: str) -> int:
     """Award points to *user_id* for *reason*.
@@ -41,6 +44,7 @@ def award_points(user_id: str, reason: str) -> int:
     data[user_id] = data.get(user_id, 0) + delta
     _save_points(data)
     return data[user_id]
+
 
 def get_rankings() -> List[Tuple[str, int]]:
     """Return a list of (user_id, points) sorted by points descending."""

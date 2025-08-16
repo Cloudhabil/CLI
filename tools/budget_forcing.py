@@ -4,6 +4,7 @@ from typing import List
 
 PHI = 1.618033988749895
 
+
 def fib_steps(n0: int = 512, n1: int = 832, limit: int = 100000) -> List[int]:
     a, b = n0, n1
     steps = [a, b]
@@ -14,6 +15,7 @@ def fib_steps(n0: int = 512, n1: int = 832, limit: int = 100000) -> List[int]:
         steps.append(c)
         a, b = b, c
     return steps
+
 
 @dataclass
 class BudgetController:
