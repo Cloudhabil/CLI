@@ -99,10 +99,17 @@ def boot():
 
 
 @app.command()
-def shell():
-    from admin_tui import main as tui_main
+def shell(
+    minimal: bool = typer.Option(
+        False, "--minimal", help="Launch minimal workspace interface"
+    )
+):
+    if minimal:
+        from ui.workspace_minimal import main as ui_main
+    else:
+        from admin_tui import main as ui_main
 
-    tui_main(route, check_ceo)
+    ui_main(route, check_ceo)
 
 
 if __name__ == "__main__":
