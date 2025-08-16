@@ -43,6 +43,12 @@ def spawn_stripe():
     _wait_health("http://127.0.0.1:7077/health")
 
 
+def spawn_profile():
+    p = subprocess.Popen(["python", "profile_server.py"])
+    processes.append(p)
+    _wait_health("http://127.0.0.1:7099/health")
+
+
 def spawn_agent(role: str, info: dict):
     model_cfg = CONFIG_MODELS["models"][info["model"]]
     env = os.environ.copy()
@@ -92,6 +98,7 @@ def check_ceo(decision_summary: str):
 def boot():
     spawn_bus()
     spawn_stripe()
+    spawn_profile()
     for role in CONFIG_AGENTS["admin"]["wake_order"]:
         spawn_agent(role, CONFIG_AGENTS["agents"][role])
     while True:

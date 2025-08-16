@@ -1,13 +1,15 @@
 from typing import Callable
 from rich.console import Console
 from kb import last, search, add_entry
+from ui.i18n import load_strings
 
 
 def main(route: Callable[[str, str, str], None], check_ceo: Callable[[str], str]):
     console = Console()
+    strings = load_strings()
     while True:
         try:
-            line = console.input("admin> ")
+            line = console.input(strings.get("prompt", "admin> "))
         except (EOFError, KeyboardInterrupt):
             break
         if not line.strip():
@@ -36,4 +38,4 @@ def main(route: Callable[[str, str, str], None], check_ceo: Callable[[str], str]
             topic, text = rest.split("||", 1)
             add_entry(kind="memo", topic=topic.strip(), text=text.strip())
         else:
-            console.print("unknown command")
+            console.print(strings.get("unknown_command", "unknown command"))

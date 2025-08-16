@@ -1,0 +1,4 @@
+prompt: "admin> "
+unknown_command: "comando desconocido"
+plan_note: "marcador de posición"
+run_stub: "Ejecutando plan stub... ok"

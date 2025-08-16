@@ -6,8 +6,10 @@ from __future__ import annotations
 import sys, json, pathlib, time
 import typer
 from rich import print
+from ui.i18n import load_strings
 
 app = typer.Typer(add_completion=False)
+strings = load_strings()
 
 @app.command()
 def plan():
@@ -16,14 +18,14 @@ def plan():
     E_s -> Chunk -> M -> Dechunk -> D_s
     """
     stages = ["E_s","Chunk","M","Dechunk","D_s"]
-    print({"pipeline": stages, "note":"placeholder"})
+    print({"pipeline": stages, "note": strings.get("plan_note", "placeholder")})
 
 @app.command()
 def run():
     """
     Execute the current plan stub. Replace with real actions as the agent evolves.
     """
-    print("Running plan stub... ok")
+    print(strings.get("run_stub", "Running plan stub... ok"))
 
 @app.command()
 def debug():

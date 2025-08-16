@@ -1,0 +1,4 @@
+prompt: "admin> "
+unknown_command: "unknown command"
+plan_note: "placeholder"
+run_stub: "Running plan stub... ok"
