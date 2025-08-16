@@ -4,6 +4,7 @@ import time
 import yaml
 import typer
 import requests
+import atexit
 from pathlib import Path
 from admin_policy import evaluate_ceo_decision
 
@@ -13,6 +14,20 @@ CONFIG_AGENTS = yaml.safe_load(open(ROOT / "configs" / "agents.yaml"))
 CONFIG_MODELS = yaml.safe_load(open(ROOT / "configs" / "models.yaml"))
 
 processes = []
+
+
+def _shutdown():
+    """Terminate spawned subprocesses on exit."""
+    for p in processes:
+        if p.poll() is None:
+            p.terminate()
+        try:
+            p.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            p.kill()
+
+
+atexit.register(_shutdown)
 
 
 def spawn_bus():
