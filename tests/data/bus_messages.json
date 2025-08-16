@@ -1,0 +1,4 @@
+[
+  {"topic": "alpha", "data": {"text": "ping"}},
+  {"topic": "beta", "data": {"text": "pong"}}
+]

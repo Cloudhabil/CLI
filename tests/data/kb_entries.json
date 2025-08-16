@@ -1,0 +1,4 @@
+[
+  {"kind": "note", "text": "hello"},
+  {"kind": "bus_message", "text": "world"}
+]
