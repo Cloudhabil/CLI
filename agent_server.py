@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Any, List, Dict, Optional
 import yaml
+import json
 
 from models.backend import make_client
 from kb import add_entry
@@ -41,6 +42,11 @@ class SettingsRequest(BaseModel):
 
 class LayoutRequest(BaseModel):
     layout: Optional[Dict[str, Any]] = None
+
+
+class PixelAvatarRequest(BaseModel):
+    palette: List[str]
+    pixels: List[List[int]]
 
 
 @app.on_event("startup")
@@ -110,6 +116,16 @@ async def update_layout(user_id: str, req: LayoutRequest):
     with open(path, "w", encoding="utf-8") as f:
         yaml.safe_dump(req.layout, f)
     return {"status": "saved", "user_id": user_id, "layout": req.layout}
+
+
+@app.post("/profile/{user_id}/avatar/pixel")
+async def save_pixel_avatar(user_id: str, req: PixelAvatarRequest):
+    base = Path("profile/avatars")
+    base.mkdir(parents=True, exist_ok=True)
+    path = base / f"{user_id}.json"
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(req.dict(), f)
+    return {"status": "saved", "user_id": user_id}
 
 
 if __name__ == "__main__":

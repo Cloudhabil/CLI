@@ -9,6 +9,8 @@ from pathlib import Path
 from admin_policy import evaluate_ceo_decision
 
 app = typer.Typer()
+profile_app = typer.Typer()
+app.add_typer(profile_app, name="profile")
 ROOT = Path(__file__).parent
 CONFIG_AGENTS = yaml.safe_load(open(ROOT / "configs" / "agents.yaml"))
 CONFIG_MODELS = yaml.safe_load(open(ROOT / "configs" / "models.yaml"))
@@ -110,6 +112,14 @@ def shell(
         from admin_tui import main as ui_main
 
     ui_main(route, check_ceo)
+
+
+@profile_app.command("pixel-edit")
+def pixel_edit(user_id: str, size: int = 32):
+    """Open pixel avatar editor for the given user."""
+    from ui.pixel_avatar import edit_avatar
+
+    edit_avatar(user_id, size)
 
 
 if __name__ == "__main__":
