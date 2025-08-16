@@ -4,7 +4,8 @@ from pathlib import Path
 import kb
 
 
-def test_kb_operations(tmp_path):
+def test_kb_entry_logging(tmp_path):
+    """Persist and query knowledge-base entries."""
     data_file = Path(__file__).parent / "data" / "kb_entries.json"
     entries = json.loads(data_file.read_text())
     kb.DB_PATH = tmp_path / "kb.db"

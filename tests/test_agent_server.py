@@ -1,4 +1,3 @@
-import agent_server
 import sys
 import types
 import json
@@ -43,6 +42,8 @@ sys.modules["profile"] = profile_pkg
 sys.modules["profile.points"] = points_mod
 sys.modules["profile.badges"] = badges_mod
 
+import agent_server
+
 
 class DummyClient:
     def chat(self, messages):
@@ -57,7 +58,8 @@ class DummySubscriber:
         self.sent.append((topic, data))
 
 
-def test_chat_and_publish(monkeypatch):
+def test_agent_chat_endpoints(monkeypatch):
+    """Exercise chat and publish endpoints."""
     monkeypatch.setattr(agent_server, "client", DummyClient())
     dummy_sub = DummySubscriber()
     monkeypatch.setattr(agent_server, "subscriber", dummy_sub)

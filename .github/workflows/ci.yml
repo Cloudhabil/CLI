@@ -16,4 +16,4 @@ jobs:
       - run: pip install flake8 mypy pytest
       - run: flake8 bus_server.py kb.py agent_server.py tests
       - run: mypy bus_server.py kb.py agent_server.py tests
-      - run: pytest
+      - run: pytest tests
