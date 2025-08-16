@@ -19,6 +19,13 @@ The CLI orchestrates a local network of agents connected through a message bus a
                       +------------------+
 ```
 
+## Navigation
+- [Architecture](docs/architecture.md)
+- [Configuration](docs/configuration.md)
+- [Security](docs/security.md)
+- [Release Notes](docs/release.md)
+- [H-Net Mission](docs/mission_fib_hnet.md)
+
 ## Prerequisites
 - Python 3.11
 - Local Ollama models (e.g., `codegemma`, `llama3.1`, `qwen2.5-coder`)
