@@ -1,7 +1,8 @@
 import os
 import threading
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Any, List, Dict, Optional
 import yaml
@@ -15,6 +16,8 @@ from profile.badges import assign_badge
 from integrations.social_hooks import init_cron
 
 app = FastAPI()
+
+SHARED_SECRET = os.environ.get("AGENT_SHARED_SECRET")
 
 role = os.environ.get("ROLE", "AGENT")
 config_model = os.environ.get("MODEL_KIND", "ollama")
@@ -31,6 +34,16 @@ prompt_path = os.environ.get("PROMPT_FILE")
 if prompt_path and os.path.exists(prompt_path):
     with open(prompt_path, "r", encoding="utf-8") as f:
         history.append({"role": "system", "content": f.read().strip()})
+
+
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    if SHARED_SECRET:
+        auth = request.headers.get("Authorization")
+        if auth != f"Bearer {SHARED_SECRET}":
+            add_entry(kind="auth_failure", role=role, path=str(request.url))
+            return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+    return await call_next(request)
 
 
 class ChatRequest(BaseModel):

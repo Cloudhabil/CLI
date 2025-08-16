@@ -6,8 +6,11 @@ if [ ! -d .venv ]; then python3 -m venv .venv; fi
 source .venv/bin/activate
 pip install -r requirements.txt
 [ -f .env.local ] || cp .env.example .env.local
+set -a
+source .env.local
+set +a
 PYTHONPATH=$ROOT python integrations/google_oauth.py
-env PYTHONPATH=$ROOT BUS_URL=http://127.0.0.1:7088 python orchestrator.py boot &
+env PYTHONPATH=$ROOT BUS_URL=http://127.0.0.1:7088 AGENT_SHARED_SECRET=$AGENT_SHARED_SECRET python orchestrator.py boot &
 PID=$!
 if [ "$1" != "-NoTUI" ]; then PYTHONPATH=$ROOT python orchestrator.py shell; fi
 wait $PID
