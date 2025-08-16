@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import shutil
 import yaml
+from profile.badges import badge_paths, frame_paths
 
 CONFIG_PATH = Path("config/avatar_evolution.yaml")
 ASSETS_DIR = Path("assets/avatars")
@@ -31,22 +32,10 @@ def determine_stage(lineage: str, points: int) -> str | None:
     return stage
 
 
-def evolve_avatar(user_id: str, lineage: str, points: int) -> str:
+def evolve_avatar(user_id: str, lineage: str, points: int) -> dict:
     """Update avatar for ``user_id`` if ``points`` reaches a new stage.
 
-    Parameters
-    ----------
-    user_id:
-        Identifier for the profile whose avatar should evolve.
-    lineage:
-        Avatar lineage defined in :file:`config/avatar_evolution.yaml`.
-    points:
-        Current progress value.
-
-    Returns
-    -------
-    str
-        Path to the user's avatar file.
+    Returns a mapping containing the avatar path along with any badges and frames.
     """
     stage = determine_stage(lineage, points)
     if stage is None:
@@ -60,4 +49,9 @@ def evolve_avatar(user_id: str, lineage: str, points: int) -> str:
         dest = PROFILE_DIR / f"{user_id}.png"
         shutil.copyfile(src, dest)
         stage_file.write_text(stage)
-    return str((PROFILE_DIR / f"{user_id}.png").resolve())
+    avatar_path = str((PROFILE_DIR / f"{user_id}.png").resolve())
+    return {
+        "avatar": avatar_path,
+        "badges": badge_paths(user_id),
+        "frames": frame_paths(user_id),
+    }

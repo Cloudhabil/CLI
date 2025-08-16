@@ -13,3 +13,5 @@ reports/
 .vscode/
 .pytest_cache/
 runs/
+assets/badges/*.png
+assets/frames/*.png

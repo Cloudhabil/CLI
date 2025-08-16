@@ -1,17 +1,22 @@
 import tkinter as tk
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+from profile.badges import badge_paths, frame_paths
 
 
 class FreeCanvas(tk.Frame):
     """Canvas widget with basic zoom, layer and drag support."""
 
-    def __init__(self, master: tk.Misc | None = None) -> None:
+    def __init__(self, master: tk.Misc | None = None, user_id: Optional[str] = None) -> None:
         super().__init__(master)
         self.canvas = tk.Canvas(self, bg="white")
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.layers: Dict[str, List[int]] = {}
         self.scale = 1.0
         self._drag_data = {"x": 0, "y": 0}
+        self.reward_images: List[tk.PhotoImage] = []
+        if user_id:
+            self._load_rewards(user_id)
 
         # Bind interactions
         self.canvas.bind("<ButtonPress-1>", self._start_drag)
@@ -19,6 +24,13 @@ class FreeCanvas(tk.Frame):
         self.canvas.bind("<MouseWheel>", self._zoom)
         self.canvas.bind("<Button-4>", self._zoom)  # Linux scroll up
         self.canvas.bind("<Button-5>", self._zoom)  # Linux scroll down
+
+    def _load_rewards(self, user_id: str) -> None:
+        for path in frame_paths(user_id) + badge_paths(user_id):
+            if Path(path).exists():
+                img = tk.PhotoImage(file=path)
+                self.reward_images.append(img)
+                self.canvas.create_image(0, 0, anchor="nw", image=img)
 
     # --- Layer handling -------------------------------------------------
     def add_layer(self, name: str) -> None:
