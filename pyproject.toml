@@ -1,4 +1,64 @@
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict = false
+# Only check our packages and key entrypoints to avoid duplicate-module collisions
+# from unrelated scripts like ch_cli.py.
+files = ["agent.py", "kb.py", "bus_client.py", "core", "hnet"]
+# Keep mypy away from transient or external-looking dirs
+disable_error_code = ["import-untyped"]
+exclude = '''(?x)(
+    ^\.venv/|
+    ^venv/|
+    ^build/|
+    ^dist/|
+    ^scripts/|
+    ^tests/|
+    ^deprecated/|
+    ^experiments/|
+    ^CLI/|
+    ^models/|
+    ^profile/|
+    ^integrations/|
+    ^admin_.*|
+    ^stripe_server.py|
+    ^loop_agent.py|
+    ^orchestrator.py|
+    ^bus_server.py|
+    ^agents.py|
+    ^agent_server.py|
+    ^backend_manager.py|
+    ^ch_repl.py|
+    ^prospect.py|
+    ^configs/|
+    ^config/|
+    ^docs/|
+    ^app_templates/|
+    ^assets/|
+    ^ui/|
+    ^project/|
+    ^prompts/|
+    ^tools/|
+    ^ui_texts.py|
+    ^kb_report.py
+)'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+include = [
+    "agent.py",
+    "kb.py",
+    "bus_client.py",
+    "core/**/*.py",
+    "hnet/**/*.py",
+    "tests/**/*.py",
+]
+
+[tool.ruff.per-file-ignores]
+"tests/*" = ["F401","F811","E402"]
+
 [tool.pytest.ini_options]
+testpaths = ["tests"]
 addopts = "-q"
 pythonpath = "."
-testpaths = ["tests"]

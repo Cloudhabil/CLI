@@ -10,9 +10,10 @@ configurable via the ``retries`` and ``backoff`` parameters on
 import os
 import requests
 import time
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 from kb import add_entry
+from core.settings import settings
 
 
 class BusClient:
@@ -20,7 +21,7 @@ class BusClient:
         self,
         base_url: str,
         topic: str,
-        handler: Callable[[Dict], None],
+        handler: Callable[[dict], None],
         *,
         retries: int = 0,
         backoff: float = 0.0,
@@ -31,7 +32,7 @@ class BusClient:
         self.handler = handler
         self.retries = retries
         self.backoff = backoff
-        self.token = token or os.environ.get("BUS_TOKEN")
+        self.token = token or settings.BUS_TOKEN or os.environ.get("BUS_TOKEN")
         self._stop = False
 
     def _request(

@@ -4,11 +4,8 @@ import os
 import re
 import sys
 import time
-import queue
-import threading
 import subprocess
-from dataclasses import dataclass
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Tuple
 
 # Minimal allowlist policy. Expand as needed.
 ALLOW_PREFIXES = [
