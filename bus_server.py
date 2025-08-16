@@ -1,3 +1,10 @@
+"""FastAPI message bus with bearer token authentication.
+
+All requests must supply an ``Authorization: Bearer`` header whose token
+matches the ``BUS_TOKEN`` environment variable. Requests with an invalid
+token return ``401 Unauthorized``.
+"""
+
 import os
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer

@@ -59,6 +59,17 @@ Admin TUI commands:
 - PowerShell allow/deny lists for command execution
 - CEO policy engine governs agent permissions
 - Bearer token auth for bus and agent servers
+  - Set `BUS_TOKEN` and `AGENT_SHARED_SECRET` in the environment
+  - Bus example:
+    ```bash
+    curl "$BUS_URL/health" -H "Authorization: Bearer $BUS_TOKEN"
+    ```
+  - Agent example:
+    ```bash
+    curl http://127.0.0.1:8000/health -H "Authorization: Bearer $AGENT_SHARED_SECRET"
+    ```
+  - Unauthorized requests are logged to the knowledge base
+  - Use long, random tokens and rotate them regularly
 
 ## Development & Testing
 Run linting and tests before committing:
