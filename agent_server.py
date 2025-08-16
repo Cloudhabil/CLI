@@ -1,7 +1,8 @@
 import os
 import threading
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Any, List, Dict, Optional
 import yaml
@@ -15,6 +16,8 @@ from profile.badges import assign_badge
 from integrations.social_hooks import init_cron
 
 app = FastAPI()
+
+SHARED_SECRET = os.environ.get("AGENT_SERVER_SECRET")
 
 role = os.environ.get("ROLE", "AGENT")
 config_model = os.environ.get("MODEL_KIND", "ollama")
@@ -68,6 +71,25 @@ async def startup_event():
 
 def handle_bus_message(msg: Dict[str, str]):
     add_entry(kind="bus_message", topic=role, payload=msg)
+
+
+@app.middleware("http")
+async def require_secret(request: Request, call_next):
+    if SHARED_SECRET:
+        auth = request.headers.get("Authorization")
+        expected = f"Bearer {SHARED_SECRET}"
+        if auth != expected:
+            add_entry(
+                kind="auth_failure",
+                role=role,
+                path=str(request.url),
+                provided=auth or "",
+            )
+            return JSONResponse(
+                {"detail": "Unauthorized"},
+                status_code=status.HTTP_401_UNAUTHORIZED,
+            )
+    return await call_next(request)
 
 
 @app.get("/health")
