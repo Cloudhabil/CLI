@@ -58,7 +58,7 @@ Admin TUI commands:
 ## Security
 - PowerShell allow/deny lists for command execution
 - CEO policy engine governs agent permissions
-- Planned token-based auth for bus and agent servers
+- Bearer token auth for bus and agent servers
 
 ## Development & Testing
 Run linting and tests before committing:
@@ -76,6 +76,7 @@ The CI workflow repeats these checks on each pull request.
 | Variable | Description | Default |
 |---|---|---|
 | `BUS_URL` | Base URL for the message bus | `http://127.0.0.1:7088` |
+| `BUS_TOKEN` | Bearer token for message bus auth | *(none)* |
 | `MODEL_KIND` | LLM backend (`ollama`, etc.) | `ollama` |
 | `GOOGLE_CLIENT_ID` | OAuth client ID | *(none)* |
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret | *(none)* |
@@ -99,10 +100,13 @@ python prospect.py
 
 Message bus publish/get:
 ```bash
-curl -X POST "$BUS_URL/publish" -H "Content-Type: application/json" \
+curl -X POST "$BUS_URL/publish" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $BUS_TOKEN" \
   -d '{"topic": "demo", "data": {"text": "hello"}}'
 
-curl "$BUS_URL/get?topic=demo"
+curl "$BUS_URL/get?topic=demo" \
+  -H "Authorization: Bearer $BUS_TOKEN"
 ```
 
 ## Contributing

@@ -7,6 +7,7 @@ configurable via the ``retries`` and ``backoff`` parameters on
 ``BusClient``.
 """
 
+import os
 import requests
 import time
 from typing import Callable, Dict, Optional
@@ -23,12 +24,14 @@ class BusClient:
         *,
         retries: int = 0,
         backoff: float = 0.0,
+        token: Optional[str] = None,
     ):
         self.base_url = base_url.rstrip('/')
         self.topic = topic
         self.handler = handler
         self.retries = retries
         self.backoff = backoff
+        self.token = token or os.environ.get("BUS_TOKEN")
         self._stop = False
 
     def _request(
@@ -43,9 +46,12 @@ class BusClient:
         retries = self.retries if retries is None else retries
         backoff = self.backoff if backoff is None else backoff
         url = f"{self.base_url}/{endpoint}"
+        headers = kwargs.pop("headers", {})
+        if self.token:
+            headers.setdefault("Authorization", f"Bearer {self.token}")
         for attempt in range(retries + 1):
             try:
-                return requests.request(method, url, timeout=60, **kwargs)
+                return requests.request(method, url, timeout=60, headers=headers, **kwargs)
             except Exception as exc:  # pragma: no cover - logging path
                 add_entry(kind="bus_client_error", data=f"{method.upper()} {url} failed: {exc}")
                 if attempt < retries:
