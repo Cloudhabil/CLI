@@ -9,7 +9,8 @@ def ensure_token(client_id: str, client_secret: str, scopes: list, token_path: P
     if token_path.exists():
         return Credentials.from_authorized_user_file(token_path, scopes)
     flow = InstalledAppFlow.from_client_config(
-        {"installed": {"client_id": client_id, "client_secret": client_secret, "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob","http://localhost"], "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token"}},
+        {"installed": {"client_id": client_id, "client_secret": client_secret, "redirect_uris": [
+            "urn:ietf:wg:oauth:2.0:oob", "http://localhost"], "auth_uri": "https://accounts.google.com/o/oauth2/auth", "token_uri": "https://oauth2.googleapis.com/token"}},
         scopes,
     )
     creds = flow.run_local_server(port=0)

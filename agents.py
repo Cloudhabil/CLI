@@ -6,6 +6,7 @@ REPO_DIR = Path.cwd()
 DOCS_DIR = REPO_DIR / "docs"
 DOCS_DIR.mkdir(exist_ok=True, parents=True)
 
+
 def agent_generate_ideas(context: dict) -> str:
     ideas = [
         "- /agent init <persona>: create scoped expert agents (senior backend, DevOps, product).",
@@ -16,6 +17,7 @@ def agent_generate_ideas(context: dict) -> str:
     ]
     return "High-impact ideas:\n" + "\n".join(ideas)
 
+
 def agent_explain_concepts(topic: str) -> str:
     return (
         f"Concept deep-dive on '{topic}':\n"
@@ -23,6 +25,7 @@ def agent_explain_concepts(topic: str) -> str:
         "- Modern applications\n"
         "- Example(s) with pros/cons"
     )
+
 
 def agent_optimize_code(code: str) -> str:
     # Placeholder for Codex+linting; return a diff-like suggestion
@@ -33,6 +36,7 @@ def agent_optimize_code(code: str) -> str:
         "- Reduce nesting\n"
         "- Use logging over prints"
     )
+
 
 def agent_resolve_problems(symptoms: str) -> str:
     return (
@@ -45,6 +49,7 @@ def agent_resolve_problems(symptoms: str) -> str:
         "6) Regression guard"
     )
 
+
 def agent_best_practices(scope: str) -> str:
     return (
         f"Best practices for {scope}:\n"
@@ -55,11 +60,13 @@ def agent_best_practices(scope: str) -> str:
         "- Security by default"
     )
 
+
 def agent_write_docs(title: str, body: str) -> Path:
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
     path = DOCS_DIR / f"{ts}_{title.replace(' ', '_').lower()}.md"
     path.write_text(f"# {title}\n\n{body}\n", encoding="utf-8")
     return path
+
 
 def agent_code_review(code: str) -> str:
     return (
@@ -70,6 +77,7 @@ def agent_code_review(code: str) -> str:
         "- Test coverage\n"
         "- Performance hotspots"
     )
+
 
 def agent_prototype(description: str) -> str:
     return f'''# prototype_app.py

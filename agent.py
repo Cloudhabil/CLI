@@ -1,4 +1,12 @@
-import argparse, json, os, re, sys, time, queue, threading, subprocess
+import argparse
+import json
+import os
+import re
+import sys
+import time
+import queue
+import threading
+import subprocess
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Dict
 
@@ -20,14 +28,17 @@ os.makedirs(LOG_DIR, exist_ok=True)
 TRANSCRIPT = os.path.join(LOG_DIR, f"transcript_{int(time.time())}.log")
 JSONL = os.path.join(LOG_DIR, f"events_{int(time.time())}.jsonl")
 
+
 def log_event(event: Dict):
     event["ts"] = time.time()
     with open(JSONL, "a", encoding="utf-8") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
 
+
 def append_transcript(line: str):
     with open(TRANSCRIPT, "a", encoding="utf-8") as f:
         f.write(line.rstrip() + "\n")
+
 
 def policy_allows(cmd: str) -> Tuple[bool, str]:
     for pat in DENY_PATTERNS:
@@ -36,6 +47,7 @@ def policy_allows(cmd: str) -> Tuple[bool, str]:
     if any(cmd.strip().lower().startswith(pfx.strip().lower()) for pfx in ALLOW_PREFIXES):
         return True, "allowed by prefix"
     return False, "not in allowlist"
+
 
 class PowerShellSession:
     def __init__(self):
@@ -88,6 +100,7 @@ class PowerShellSession:
         except Exception:
             pass
 
+
 def default_planner(goal: str) -> List[str]:
     # Simple rule-based planner for local dev; replace with LLM later.
     g = goal.lower()
@@ -103,6 +116,7 @@ def default_planner(goal: str) -> List[str]:
         # Fallback: at least list directory
         steps = ["pwd", "dir"]
     return steps
+
 
 def run_agent(goal: str, dry_run: bool = False) -> int:
     append_transcript(f"# Goal: {goal}")
@@ -149,6 +163,7 @@ def run_agent(goal: str, dry_run: bool = False) -> int:
         return 0
     finally:
         ps.close()
+
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()

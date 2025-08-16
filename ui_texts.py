@@ -3,6 +3,7 @@ import yaml
 
 LOCALES_DIR = Path(__file__).resolve().parent / "locales"
 
+
 def load_texts(lang: str) -> dict:
     """Load localized UI strings for the given language code."""
     path = LOCALES_DIR / f"{lang}.yaml"
